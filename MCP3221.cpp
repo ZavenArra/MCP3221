@@ -43,6 +43,7 @@ __asm volatile ("nop");
  *==============================================================================================================*/
 
 MCP3221::MCP3221(
+     TwoWire*        wire,
      byte            devAddr,
      unsigned int    vRef,
      unsigned int    res1,
@@ -58,6 +59,7 @@ MCP3221::MCP3221(
      _smoothing(smoothingMethod),
      _numSamples(numSamples)
      {
+        _wire = wire;
         memset(_samples, 0, sizeof(_samples));
         if (((res1 != 0) && (res2 != 0)) && (_voltageInput == VOLTAGE_INPUT_12V)) {
             _res1 = res1;
@@ -85,8 +87,8 @@ MCP3221::~MCP3221() {}
 // See meaning of I2C Error Code values in README
 
 byte MCP3221::ping() {
-    Wire.beginTransmission(_devAddr);
-    return _comBuffer = Wire.endTransmission();
+    _wire->beginTransmission(_devAddr);
+    return _comBuffer = _wire->endTransmission();
 }
 
 /*==============================================================================================================*
@@ -254,8 +256,8 @@ void MCP3221::reset() {
 
 unsigned int MCP3221::getRawData() {
     unsigned int rawData = 0;
-    Wire.requestFrom(_devAddr, DATA_BYTES);
-    if (Wire.available() == DATA_BYTES) rawData = (Wire.read() << 8) | (Wire.read());
+    _wire->requestFrom(_devAddr, DATA_BYTES);
+    if (_wire->available() == DATA_BYTES) rawData = (_wire->read() << 8) | (_wire->read());
     else ping();
     return rawData;
 }
